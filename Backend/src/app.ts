@@ -1,48 +1,97 @@
 import express from 'express'
-import {string, z} from 'zod'
-const requiredbody =z.object({
-email:z.string().min(3).max(100).email(),
-name:z.string().min(3).max(10),
-password:z.string()
+import { z } from 'zod'
+import  Jwt  from 'jsonwebtoken'
 
-})
- export const app = express()
- app.use(express.json())
+import bcryptjs from 'bcryptjs'
+import { User } from './Models/User.model'
+ const JWT_SECRET = "FDFDFDFDF"
+
+export const app = express()
+app.use(express.json())
+
 
 //@ts-ignore
- app.get('/' ,(req:Request ,res:Response)=>{
-    //@ts-ignore
-    res.send("hi there")
- })
-
- //@ts-ignore
- app.post('/api/v1/signup' ,(req:Request ,res:Response)=>{
-   //@ts-ignore
- 
-   
-   const {username ,password} = req.body
-   console.log(username)
-
-   console.log(password)
-   const parsedDatawithSuccss = requiredbody.safeParse(req.body)
-   if (!parsedDatawithSuccss.success){
-      //@ts-ignore
-      res.json({
-         message:"Incorrect format",
-         error:parsedDatawithSuccss.error
-      })
-   }
-   //@ts-ignore
-   res.json({
-      success:true,
-      message:"signup success"
-   })
-
-
-})
-
-//@ts-ignore
-app.post('/api/v1/login' ,(req:Request ,res:Response)=>{
+app.get('/', (req: Request, res: Response) => {
    //@ts-ignore
    res.send("hi there")
+})
+
+
+
+const requiredbody = z.object({
+   email: z.string().min(3).max(100).email(),
+   password: z.string()
+
+})
+
+//@ts-ignore
+app.post('/api/v1/users/signup', async (req: Request, res: Response) => {
+
+      //@ts-ignore
+      const { email, password } = req.body
+
+      console.log(email)
+
+      console.log(password)
+      const parsedDatawithSuccss = requiredbody.safeParse(req.body)
+      if (!parsedDatawithSuccss.success) {
+         //@ts-ignore
+         res.json({
+            message: "Incorrect format",
+            error: parsedDatawithSuccss.error
+         })
+
+      }
+      const hashedpassword =  await bcryptjs.hash(password, 10)
+      try {
+          const newuser =await User.create({
+            email,
+            password: hashedpassword
+
+         })
+         const token = Jwt.sign({ id: newuser._id }, JWT_SECRET)
+         //@ts-ignore
+         res.json({
+        token:token
+         })
+
+      } catch (error) {
+         //@ts-ignore
+         res.json({success:false, message:"email already exists"})
+         
+      }
+          
+   
+  
+
+
+
+
+})
+app.post('/api/v1/users/signin' ,async(req,res)=>{
+   const { email, password } = req.body;
+   const safepaarsed = requiredbody.safeParse(req.body)
+   if (!safepaarsed) {
+      res.json({ success: false, message: "inputs didnot meet the credentials" })
+      return;
+   }
+
+   const user = await User.findOne({email})
+   if (user) {
+      const verifieduser = await bcryptjs.compare(user.password,password)
+      if(!verifieduser){
+        res.status(400).json({message:"invalid password"})
+        return
+      }
+     const token = Jwt.sign({id:user._id},JWT_SECRET)
+res.status(201).json({
+   token:token
+})
+
+   }
+  else(res.json({message:"incorrect credentials"}))
+     
+   
+
+
 })
