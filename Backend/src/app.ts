@@ -1,18 +1,18 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 import { z } from 'zod'
-import  Jwt  from 'jsonwebtoken'
+import Jwt from 'jsonwebtoken'
 
 import bcryptjs from 'bcryptjs'
 import { User } from './Models/User.model'
- const JWT_SECRET = "FDFDFDFDF"
+const JWT_SECRET = "FDFDFDFDF"
 
 export const app = express()
 app.use(express.json())
 
 
-//@ts-ignore
+
 app.get('/', (req: Request, res: Response) => {
-   //@ts-ignore
+
    res.send("hi there")
 })
 
@@ -24,51 +24,52 @@ const requiredbody = z.object({
 
 })
 
-//@ts-ignore
+
 app.post('/api/v1/users/signup', async (req: Request, res: Response) => {
 
-      //@ts-ignore
-      const { email, password } = req.body
 
-      console.log(email)
+   const { email, password } = req.body
 
-      console.log(password)
-      const parsedDatawithSuccss = requiredbody.safeParse(req.body)
-      if (!parsedDatawithSuccss.success) {
-         //@ts-ignore
-         res.json({
-            message: "Incorrect format",
-            error: parsedDatawithSuccss.error
-         })
+   console.log(email)
 
-      }
-      const hashedpassword =  await bcryptjs.hash(password, 10)
-      try {
-          const newuser =await User.create({
-            email,
-            password: hashedpassword
+   console.log(password)
+   const parsedDatawithSuccss = requiredbody.safeParse(req.body)
+   if (!parsedDatawithSuccss.success) {
 
-         })
-         const token = Jwt.sign({ id: newuser._id }, JWT_SECRET)
-         //@ts-ignore
-         res.json({
-        token:token
-         })
+      res.json({
+         message: "Incorrect format",
+         error: parsedDatawithSuccss.error
+      })
 
-      } catch (error) {
-         //@ts-ignore
-         res.json({success:false, message:"email already exists"})
-         
-      }
-          
-   
-  
+   }
+   const hashedpassword = await bcryptjs.hash(password, 10)
+   try {
+      const newuser = await User.create({
+         email,
+         password: hashedpassword
+
+      })
+      const token = Jwt.sign({ id: newuser._id }, JWT_SECRET)
+
+      res.json({
+         token: token
+      })
+
+   } catch (error) {
+
+      res.json({ success: false, message: "email already exists" })
+
+   }
+
+
+
 
 
 
 
 })
-app.post('/api/v1/users/signin' ,async(req,res)=>{
+
+app.post('/api/v1/users/signin', async (req: Request, res: Response) => {
    const { email, password } = req.body;
    const safepaarsed = requiredbody.safeParse(req.body)
    if (!safepaarsed) {
@@ -76,22 +77,26 @@ app.post('/api/v1/users/signin' ,async(req,res)=>{
       return;
    }
 
-   const user = await User.findOne({email})
+   const user = await User.findOne({ email })
    if (user) {
-      const verifieduser = await bcryptjs.compare(user.password,password)
-      if(!verifieduser){
-        res.status(400).json({message:"invalid password"})
-        return
+      const verifieduser = await bcryptjs.compare(user.password, password)
+      if (!verifieduser) {
+         res.status(400).json({ message: "invalid password" })
+         return
       }
-     const token = Jwt.sign({id:user._id},JWT_SECRET)
-res.status(201).json({
-   token:token
-})
+      const token = Jwt.sign({ id: user._id }, JWT_SECRET)
+      res.status(201).json({
+         token: token
+      })
 
    }
-  else(res.json({message:"incorrect credentials"}))
-     
-   
+   else (res.json({ message: "incorrect credentials" }))
 
 
+
+
+})
+
+app.get('/api/v1/users/content',async(req:Request, res:Response)=>{
+   const {link,tags} =req.body
 })
