@@ -6,9 +6,9 @@ config({
 import { app } from "./app";
 import { conn } from "./db/conn";
 conn()
+const PORT:number = 4000
 
-
-const PORT =4000
+console.log(PORT)
 app.listen( PORT,  ()=>{
     console.log(`listening on ${PORT}`)
 })
