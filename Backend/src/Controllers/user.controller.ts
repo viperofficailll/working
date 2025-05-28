@@ -26,9 +26,7 @@ export const signuphandeler = async (req: Request, res: Response) => {
 
     const { email, password } = req.body
 
-    console.log(email)
 
-    console.log(password)
     const parsedDatawithSuccss = requiredbody.safeParse(req.body)
     if (!parsedDatawithSuccss.success) {
 
@@ -139,18 +137,62 @@ export const deletecontenthandeler = async (req: Request, res: Response) => {
 }
 
 export const sharehandeler = async (req: Request, res: Response) => {
+ 
     const share = req.body.share;
+
     if (share) {
+        const existingLink = await Link.findOne({
+            userId: req.UserId
+        });
+
+        if (existingLink) {
+            return res.json({
+                hash: existingLink.hash
+            });
+        }
+
+        const hash = random(10);
         await Link.create({
             userId: req.UserId,
-            hash: random(10)
-        })
-    }
-    else {
-        await Link.deleteOne({
-            userId: req.UserId 
+            hash: hash
+        });
 
-        })
+        return res.json({ hash });
+    } else {
+        await Link.deleteOne({
+            userId: req.UserId
+        });
+
+        return res.json({ message: "Removed link" });
     }
-    res.json({message:"Updated sharable link"})
-}
+};
+
+
+
+export const viewsharedhandeler = async (req: Request, res: Response) => {
+    try {
+        const hash = req.params.sharelink;
+
+        const foundlink = await Link.findOne({ hash });
+
+        if (!foundlink) {
+            return res.status(404).json({ message: 'Invalid or expired share link.' });
+        }
+
+        const user = await User.findById(foundlink.userId).select('email');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const content = await Content.find({ userId: foundlink.userId });
+
+        return res.json({
+            user,
+            content
+        });
+    } catch (error) {
+        console.error('Error in viewsharedhandeler:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+};
