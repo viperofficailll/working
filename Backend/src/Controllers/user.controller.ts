@@ -1,11 +1,12 @@
 
 import { User } from "../Models/User.model"; 
-import { NextFunction, request, Request, Response } from "express";
+import { NextFunction,  Request, Response } from "express";
 import { z } from "zod";
 import bcryptjs from 'bcryptjs'
 import  Jwt  from "jsonwebtoken";
 import { Content} from "../Models/content.model";
 const JWT_SECRET = 'fdfdfdsfdfefefek'
+import mongoose, { Types } from "mongoose";
 
 
 
@@ -21,7 +22,7 @@ export const signuphandeler = async(req:Request,res:Response)=>{
    
 
 
-        const { email, password } = request.body
+        const { email, password } = req.body
 
         console.log(email)  
 
@@ -70,7 +71,7 @@ export const signinhandeler = async (req: Request, res: Response)=>{
 
     const user = await User.findOne({ email })
     if (user) {
-        const verifieduser = await bcryptjs.compare(user.password, password)
+        const verifieduser = await bcryptjs.compare(password,user.password)
         if (!verifieduser) {
             res.status(400).json({ message: "invalid password" })
             return
@@ -81,7 +82,7 @@ export const signinhandeler = async (req: Request, res: Response)=>{
         })
 
     }
-    else (res.json({ message: "incorrect credentials" }))
+    else (res.json({ message: "Email not found" }))
 
 }
         
@@ -89,12 +90,16 @@ export const signinhandeler = async (req: Request, res: Response)=>{
 export const ContentHandeler = async (req: Request, res: Response ,next:NextFunction) => {
     const link = req.body.link
     const type = req.body.type
+    const title = req.body.title
+    const tags = req.body.tag
        await Content.create({
+        title,
         link,
         type,
         //@ts-ignore
         userid:req.UserId,
-        tags:[]
+        tags
+       
     })
     return res.json({
         message:"content Added"
@@ -108,7 +113,25 @@ export const getContent = async(req:Request,res:Response)=>{
     //@ts-ignore
     const userid = req.UserId
     const content = await  Content.find(
-        userid
-    ).populate("Userid","username")
+        {
+            userid:userid
+        }
+    ).populate("userid" ,"email")
     res.json({content})
+}
+
+export const deletecontenthandeler = async(req:Request,res:Response)=>{
+    const {_id}= req.body
+    try {
+        const objectId = new mongoose.Types.ObjectId(_id);
+
+         await Content.deleteOne({ _id:objectId });
+        res.json({ message: "Content deleted successfully" });
+    } catch (err) {
+        console.error("Error deleting content:", err);
+        res.status(500).json({ error: "Failed to delete content" });
+    }
+    
+
+   
 }

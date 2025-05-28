@@ -5,9 +5,8 @@ const ContentSchema = new mongoose.Schema({
 title:String,
 link:String,
 tags:{
-    type:mongoose.Schema.ObjectId,
-    ref:'Tag',
-    required:true
+    type:String,
+   
 },
 userid:{
     type:mongoose.Schema.ObjectId,
