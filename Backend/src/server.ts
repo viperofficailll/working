@@ -1,14 +1,8 @@
-
-import { config } from "dotenv";
-config({
-    path:"./config.env"
-})
+import { PORT } from "./config";
 import { app } from "./app";
 import { conn } from "./db/conn";
-conn()
-const PORT:number = 4000
+conn();
 
-console.log(PORT)
-app.listen( PORT,  ()=>{
-    console.log(`listening on ${PORT}`)
-})
+app.listen(PORT, () => {
+  console.log(`listening on ${PORT}`);
+});
