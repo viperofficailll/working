@@ -20,14 +20,15 @@ const sizestyles = {
   lg: "py-4 px-6" ,
 };
 
-const defaultStyles = "rounded-md";
+const defaultStyles = "rounded-md flex justify-center  items-center  gap-[4px]";
 
 export const Button = (props: ButtonProps) => {
   return (
     <button
-      className={`${varientStyles[props.varient]} ${sizestyles[props.size]} ${defaultStyles}`}
-      onClick={props.onClick}
+      className={`${varientStyles[props.varient]} ${sizestyles[props.size]} ${defaultStyles} ${props.starticon}` }
+      onClick={props.onClick} 
     >
+      {props.starticon} 
       {props.text}
     </button>
   );
