@@ -1,8 +1,10 @@
-// types/express/index.d.ts (or anywhere your types are defined)
-import { Request } from "express";
-
-declare module "express-serve-static-core" {
+// First, create a types file (e.g., types/express.d.ts)
+declare global {
+  namespace Express {
     interface Request {
-        UserId?: string;
+      UserId?: string;
     }
+  }
 }
+
+export {};

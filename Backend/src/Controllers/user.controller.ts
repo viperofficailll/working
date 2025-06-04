@@ -4,7 +4,6 @@ import { z } from "zod";
 import bcryptjs from "bcryptjs";
 import Jwt from "jsonwebtoken";
 import { Content } from "../Models/content.model";
-const JWT_SECRET = "fdfdfdsfdfefefek";
 import mongoose from "mongoose";
 import { Link } from "../Models/link.mode";
 import { random } from "../utils";
@@ -30,7 +29,7 @@ export const signuphandeler = async (req: Request, res: Response) => {
       email,
       password: hashedpassword,
     });
-    const token = Jwt.sign({ id: newuser._id }, JWT_SECRET);
+    const token = Jwt.sign({ id: newuser._id },process.env.JWT_SECRET);
 
     res.json({
       token: token,
@@ -55,7 +54,7 @@ export const signinhandeler = async (req: Request, res: Response) => {
       res.status(400).json({ message: "invalid password" });
       return;
     }
-    const token = Jwt.sign({ id: user._id }, JWT_SECRET);
+    const token = Jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.status(201).json({
       token: token,
     });
@@ -75,17 +74,17 @@ export const ContentHandeler = async (
     title,
     link,
     type,
-    //@ts-ignore
+  
     userId: req.UserId,
     tags,
   });
-  return res.json({
+  res.json({
     message: "content Added",
   });
 };
 
 export const getContent = async (req: Request, res: Response) => {
-  //@ts-ignore
+  
   const userid = req.UserId;
   const content = await Content.find({ userId: userid }).populate(
     "userId",
@@ -117,7 +116,7 @@ export const sharehandeler = async (req: Request, res: Response) => {
     });
 
     if (existingLink) {
-      return res.json({
+       res.json({
         hash: existingLink.hash,
       });
     }
@@ -128,13 +127,13 @@ export const sharehandeler = async (req: Request, res: Response) => {
       hash: hash,
     });
 
-    return res.json({ hash });
+    res.json({ hash });
   } else {
     await Link.deleteOne({
       userId: req.UserId,
     });
 
-    return res.json({ message: "Removed link" });
+    res.json({ message: "Removed link" });
   }
 };
 
@@ -145,25 +144,26 @@ export const viewsharedhandeler = async (req: Request, res: Response) => {
     const foundlink = await Link.findOne({ hash });
 
     if (!foundlink) {
-      return res
+       res
         .status(404)
         .json({ message: "Invalid or expired share link." });
+        return
     }
 
     const user = await User.findById(foundlink.userId).select("email");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+     res.status(404).json({ message: "User not found." });
     }
 
     const content = await Content.find({ userId: foundlink.userId });
 
-    return res.json({
+     res.json({
       user,
       content,
     });
   } catch (error) {
     console.error("Error in viewsharedhandeler:", error);
-    return res.status(500).json({ message: "Internal server error." });
+     res.status(500).json({ message: "Internal server error." });
   }
 };
